@@ -126,3 +126,159 @@ beta1_hat = coef(ls_fit)[2]
 ```
 
 
+Wirte a function that simulates data, fits and model, and returns the estimates. Inputs are sample size and true coefficients.
+
+```{r}
+sim_regression = function(n, beta0, beta1) {
+  sim_data = tibble(
+  x = rnorm(30, mean = 1, sd = 1),
+  y = beta0 + beta1 * x + rnorm(30, 0, 1)
+  )
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+  beta0_hat = coef(ls_fit)[1],
+  beta1_hat = coef(ls_fit)[2]
+  )
+
+
+}
+```
+
+```{r}
+sim_regression(n = 3000, beta0 = 0, beta1 = -1)
+```
+
+```{r}
+sim_regression(3000, 2, 5)
+```
+
+
+## Some old example
+
+```{r, eval = FALSE}
+url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
+
+dynamite_html = read_html(url)
+
+review_titles = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-title") %>%
+  html_text()
+
+review_stars = dynamite_html %>%
+  html_nodes("#cm_cr-review_list .review-rating") %>%
+  html_text()
+
+review_text = dynamite_html %>%
+    html_nodes(".review-data:nth-child(4)") %>%
+    html_text()
+
+reviews = tibble(
+  title = review_titles,
+  stars = review_stars,
+  text = review_text
+)
+```
+
+Wirte a function to extract reviews.
+
+```{r}
+url = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber=1"
+
+extract_reviews = function(url) {
+  dynamite_html = read_html(url)
+  
+  review_titles = dynamite_html %>%
+    html_nodes("#cm_cr-review_list .review-title") %>%
+    html_text()
+  
+  review_stars = dynamite_html %>%
+    html_nodes("#cm_cr-review_list .review-rating") %>%
+    html_text()
+  
+  review_text = dynamite_html %>%
+    html_nodes(".review-data:nth-child(4)") %>%
+    html_text()
+  
+  reviews = tibble(
+    title = review_titles,
+    stars = review_stars,
+    text = review_text
+  )
+  reviews
+}
+
+extract_reviews(url)
+```
+
+Let's extract a lot of reviews...
+
+```{r}
+url_base = "https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&reviewerType=avp_only_reviews&sortBy=recent&pageNumber="
+urls = str_c(url_base, 1:5)
+
+dynamite_reviews = bind_rows(
+  extract_reviews(urls[1]),
+  extract_reviews(urls[2]),
+  extract_reviews(urls[3]),
+  extract_reviews(urls[4]),
+  extract_reviews(urls[5])
+)
+
+dynamite_reviews
+```
+
+
+## example in tidy data
+
+```{r}
+fellowship_ring = readxl::read_excel("./data/LotR_Words.xlsx", range = "B3:D6") %>%
+  mutate(movie = "fellowship_ring")
+
+two_towers = readxl::read_excel("./data/LotR_Words.xlsx", range = "F3:H6") %>%
+  mutate(movie = "two_towers")
+
+return_king = readxl::read_excel("./data/LotR_Words.xlsx", range = "J3:L6") %>%
+  mutate(movie = "return_king")
+
+lotr_tidy = bind_rows(fellowship_ring, two_towers, return_king) %>%
+  janitor::clean_names() %>%
+  gather(key = sex, value = words, female:male) %>%
+  mutate(race = tolower(race)) %>% 
+  select(movie, everything()) 
+
+## there is some code repeat three times in "readxl::read_excel", then we need to write a function
+```
+
+
+```{r}
+lotr_import = function(cell_range, movie_title) {
+  
+  readxl::read_excel("./data/LotR_Words.xlsx", range = cell_range) %>%
+  mutate(movie = movie_title)
+  
+}
+
+lotr_import("B3:D6", "fellowship_ring")
+lotr_import("F3:H6", "two_towers")
+lotr_import("J3:L6", "return_king")
+
+```
+
+
+## Scoping...
+
+```{r}
+f = function(x) {
+  z = x + y
+  z
+}
+
+x = 1
+y = 2
+
+f(x = y)
+
+## [1] 4
+```
+

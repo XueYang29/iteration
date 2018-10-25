@@ -241,6 +241,183 @@ ls_fit = lm(y ~ x, data = sim_data)
   
 beta0_hat = coef(ls_fit)[1]
 beta1_hat = coef(ls_fit)[2]</code></pre>
+<p>Wirte a function that simulates data, fits and model, and returns the estimates. Inputs are sample size and true coefficients.</p>
+<pre class="r"><code>sim_regression = function(n, beta0, beta1) {
+  sim_data = tibble(
+  x = rnorm(30, mean = 1, sd = 1),
+  y = beta0 + beta1 * x + rnorm(30, 0, 1)
+  )
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+  beta0_hat = coef(ls_fit)[1],
+  beta1_hat = coef(ls_fit)[2]
+  )
+
+
+}</code></pre>
+<pre class="r"><code>sim_regression(n = 3000, beta0 = 0, beta1 = -1)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   beta0_hat beta1_hat
+##       &lt;dbl&gt;     &lt;dbl&gt;
+## 1     0.297     -1.17</code></pre>
+<pre class="r"><code>sim_regression(3000, 2, 5)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   beta0_hat beta1_hat
+##       &lt;dbl&gt;     &lt;dbl&gt;
+## 1      2.18      4.75</code></pre>
+</div>
+<div id="some-old-example" class="section level2">
+<h2>Some old example</h2>
+<pre class="r"><code>url = &quot;https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&amp;reviewerType=avp_only_reviews&amp;sortBy=recent&amp;pageNumber=1&quot;
+
+dynamite_html = read_html(url)
+
+review_titles = dynamite_html %&gt;%
+  html_nodes(&quot;#cm_cr-review_list .review-title&quot;) %&gt;%
+  html_text()
+
+review_stars = dynamite_html %&gt;%
+  html_nodes(&quot;#cm_cr-review_list .review-rating&quot;) %&gt;%
+  html_text()
+
+review_text = dynamite_html %&gt;%
+    html_nodes(&quot;.review-data:nth-child(4)&quot;) %&gt;%
+    html_text()
+
+reviews = tibble(
+  title = review_titles,
+  stars = review_stars,
+  text = review_text
+)</code></pre>
+<p>Wirte a function to extract reviews.</p>
+<pre class="r"><code>url = &quot;https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&amp;reviewerType=avp_only_reviews&amp;sortBy=recent&amp;pageNumber=1&quot;
+
+extract_reviews = function(url) {
+  dynamite_html = read_html(url)
+  
+  review_titles = dynamite_html %&gt;%
+    html_nodes(&quot;#cm_cr-review_list .review-title&quot;) %&gt;%
+    html_text()
+  
+  review_stars = dynamite_html %&gt;%
+    html_nodes(&quot;#cm_cr-review_list .review-rating&quot;) %&gt;%
+    html_text()
+  
+  review_text = dynamite_html %&gt;%
+    html_nodes(&quot;.review-data:nth-child(4)&quot;) %&gt;%
+    html_text()
+  
+  reviews = tibble(
+    title = review_titles,
+    stars = review_stars,
+    text = review_text
+  )
+  reviews
+}
+
+extract_reviews(url)</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##    title                   stars       text                               
+##    &lt;chr&gt;                   &lt;chr&gt;       &lt;chr&gt;                              
+##  1 &quot;Great \&quot;Odd Ball\&quot; mo~ 5.0 out of~ The dance scene was worth the time~
+##  2 Nostalgic Stupidity     4.0 out of~ This movie is dumb. I won't lie an~
+##  3 Happy                   5.0 out of~ Don't know why I lov this movie bu~
+##  4 Go watch THE ROCK or d~ 2.0 out of~ This movie is horrible. How do so ~
+##  5 My mom loves it         5.0 out of~ Got this for my mom for mother's d~
+##  6 Nothing Quite Like It.  5.0 out of~ So much fun watching these listles~
+##  7 Has pretty sweet bow s~ 5.0 out of~ Well, things are getting pretty se~
+##  8 Great                   5.0 out of~ Great                              
+##  9 Fast delivery           5.0 out of~ Bought as gift                     
+## 10 Lol                     5.0 out of~ Funny</code></pre>
+<p>Let’s extract a lot of reviews…</p>
+<pre class="r"><code>url_base = &quot;https://www.amazon.com/product-reviews/B00005JNBQ/ref=cm_cr_arp_d_viewopt_rvwer?ie=UTF8&amp;reviewerType=avp_only_reviews&amp;sortBy=recent&amp;pageNumber=&quot;
+urls = str_c(url_base, 1:5)
+
+dynamite_reviews = bind_rows(
+  extract_reviews(urls[1]),
+  extract_reviews(urls[2]),
+  extract_reviews(urls[3]),
+  extract_reviews(urls[4]),
+  extract_reviews(urls[5])
+)
+
+dynamite_reviews</code></pre>
+<pre><code>## # A tibble: 50 x 3
+##    title                   stars       text                               
+##    &lt;chr&gt;                   &lt;chr&gt;       &lt;chr&gt;                              
+##  1 &quot;Great \&quot;Odd Ball\&quot; mo~ 5.0 out of~ The dance scene was worth the time~
+##  2 Nostalgic Stupidity     4.0 out of~ This movie is dumb. I won't lie an~
+##  3 Happy                   5.0 out of~ Don't know why I lov this movie bu~
+##  4 Go watch THE ROCK or d~ 2.0 out of~ This movie is horrible. How do so ~
+##  5 My mom loves it         5.0 out of~ Got this for my mom for mother's d~
+##  6 Nothing Quite Like It.  5.0 out of~ So much fun watching these listles~
+##  7 Has pretty sweet bow s~ 5.0 out of~ Well, things are getting pretty se~
+##  8 Great                   5.0 out of~ Great                              
+##  9 Fast delivery           5.0 out of~ Bought as gift                     
+## 10 Lol                     5.0 out of~ Funny                              
+## # ... with 40 more rows</code></pre>
+</div>
+<div id="example-in-tidy-data" class="section level2">
+<h2>example in tidy data</h2>
+<pre class="r"><code>fellowship_ring = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;B3:D6&quot;) %&gt;%
+  mutate(movie = &quot;fellowship_ring&quot;)
+
+two_towers = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;F3:H6&quot;) %&gt;%
+  mutate(movie = &quot;two_towers&quot;)
+
+return_king = readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = &quot;J3:L6&quot;) %&gt;%
+  mutate(movie = &quot;return_king&quot;)
+
+lotr_tidy = bind_rows(fellowship_ring, two_towers, return_king) %&gt;%
+  janitor::clean_names() %&gt;%
+  gather(key = sex, value = words, female:male) %&gt;%
+  mutate(race = tolower(race)) %&gt;% 
+  select(movie, everything()) 
+
+## there is some code repeat three times in &quot;readxl::read_excel&quot;, then we need to write a function</code></pre>
+<pre class="r"><code>lotr_import = function(cell_range, movie_title) {
+  
+  readxl::read_excel(&quot;./data/LotR_Words.xlsx&quot;, range = cell_range) %&gt;%
+  mutate(movie = movie_title)
+  
+}
+
+lotr_import(&quot;B3:D6&quot;, &quot;fellowship_ring&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   Race   Female  Male movie          
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;          
+## 1 Elf      1229   971 fellowship_ring
+## 2 Hobbit     14  3644 fellowship_ring
+## 3 Man         0  1995 fellowship_ring</code></pre>
+<pre class="r"><code>lotr_import(&quot;F3:H6&quot;, &quot;two_towers&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   Race   Female  Male movie     
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;     
+## 1 Elf       331   513 two_towers
+## 2 Hobbit      0  2463 two_towers
+## 3 Man       401  3589 two_towers</code></pre>
+<pre class="r"><code>lotr_import(&quot;J3:L6&quot;, &quot;return_king&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   Race   Female  Male movie      
+##   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      
+## 1 Elf       183   510 return_king
+## 2 Hobbit      2  2673 return_king
+## 3 Man       268  2459 return_king</code></pre>
+</div>
+<div id="scoping" class="section level2">
+<h2>Scoping…</h2>
+<pre class="r"><code>f = function(x) {
+  z = x + y
+  z
+}
+
+x = 1
+y = 2
+
+f(x = y)</code></pre>
+<pre><code>## [1] 4</code></pre>
+<pre class="r"><code>## [1] 4</code></pre>
 </div>
 
 
