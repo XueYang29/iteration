@@ -1,0 +1,128 @@
+---
+title: "writing_functions"
+author: "Xue Yang"
+date: "10/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rvest)
+
+set.seed(1)
+
+```
+
+
+## Let's wirte some functions
+
+Start small!!
+
+```{r}
+x = rnorm(25, 5, 3)
+
+(x - mean(x)) / sd(x)
+```
+
+Write a function to compute a scores for a vector
+```{r}
+z_scores = function(x) {
+  
+  (x - mean(x)) / sd(x)
+  
+}
+```
+
+check to see if this works ...
+
+```{r}
+unif_sample = runif(100)
+
+z_scores(x = unif_sample)
+```
+
+check some other examples ...
+```{r}
+# z_scores(3)
+ 
+# z_scores("my name is jeff")
+
+# z_scores(iris)
+
+# z_scores(sample(c(TRUE, FALSE), 25, replace = TRUE))
+```
+
+Put in some checks on inputs ...
+
+```{r}
+z_scores = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  (x - mean(x)) / sd(x)
+}
+```
+
+
+
+### Mean and sd
+
+```{r}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  mean_x =mean(x)
+  sd_x = sd(x)
+  
+  c(mean_x, sd_x)
+}
+
+mean_and_sd(unif_sample)
+```
+
+```{r}
+mean_and_sd = function(x) {
+  
+  if (!is.numeric(x)) {
+    stop("Argument x should be numeric")
+  } else if (length(x) == 1) {
+    stop("Z scores cannot be computed for length 1 vectors")
+  }
+  
+  tibble(
+    mean_x = mean(x),
+    sd_x = sd(x)
+  )
+  
+}
+
+mean_and_sd(unif_sample)
+```
+
+
+## Multipke inputs
+
+Look at simple linear regressions!
+
+```{r}
+sim_data = tibble(
+  x = rnorm(30, mean = 1, sd = 1),
+  y = 2 + 3 * x + rnorm(30, 0, 1)
+)
+
+ls_fit = lm(y ~ x, data = sim_data)
+  
+beta0_hat = coef(ls_fit)[1]
+beta1_hat = coef(ls_fit)[2]
+```
+
+
