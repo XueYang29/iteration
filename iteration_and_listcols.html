@@ -152,7 +152,7 @@ l</code></pre>
 ## 
 ## $summary
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-## -2.66907 -0.68883 -0.03035 -0.01475  0.68022  3.24486</code></pre>
+## -2.90918 -0.65930 -0.05169 -0.02960  0.62314  4.14835</code></pre>
 <pre class="r"><code>l[[2]]</code></pre>
 <pre><code>##      [,1] [,2] [,3] [,4]
 ## [1,]    1    3    5    7
@@ -170,10 +170,9 @@ l</code></pre>
 is.list(df)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>df[[1]]</code></pre>
-<pre><code>##  [1]  2.5183752  3.7886140  3.4617181  3.3302265  1.9179456  2.9316730
-##  [7]  5.0291195  0.7421720  3.3571460  2.9932919 -0.2259231  2.9844258
-## [13]  1.6475516  4.3574520  1.0634636  3.2354296  4.5657675  2.5309259
-## [19]  4.2664886  2.6293131</code></pre>
+<pre><code>##  [1] 3.0152606 3.8693721 4.4399733 1.6620943 4.0544592 4.1504774 2.5005825
+##  [8] 3.2002990 3.2039583 0.9330824 3.4769290 3.6179779 3.8830831 3.1159786
+## [15] 1.3718104 2.9569837 2.0124281 3.5017438 3.4925606 2.9057041</code></pre>
 <p>Let’s get a function!</p>
 <pre class="r"><code>mean_and_sd = function(x) {
   
@@ -196,22 +195,22 @@ is.list(df)</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  2.86  1.33</code></pre>
+## 1  3.07 0.949</code></pre>
 <pre class="r"><code>mean_and_sd(df[[2]])</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1 -2.23  4.46</code></pre>
+## 1  1.27  4.47</code></pre>
 <pre class="r"><code>mean_and_sd(df[[3]])</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  9.93 0.251</code></pre>
+## 1  10.0 0.226</code></pre>
 <pre class="r"><code>mean_and_sd(df[[4]])</code></pre>
 <pre><code>## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1 -2.74 0.928</code></pre>
+## 1 -3.04  1.00</code></pre>
 <p>Wirte a for loop!</p>
 <pre class="r"><code>output = vector(&quot;list&quot;, length = 4)
 
@@ -231,25 +230,25 @@ output</code></pre>
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  2.86  1.33
+## 1  3.07 0.949
 ## 
 ## [[2]]
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1 -2.23  4.46
+## 1  1.27  4.47
 ## 
 ## [[3]]
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  9.93 0.251
+## 1  10.0 0.226
 ## 
 ## [[4]]
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1 -2.74 0.928</code></pre>
+## 1 -3.04  1.00</code></pre>
 </div>
 <div id="map-statements" class="section level2">
 <h2>map statements</h2>
@@ -263,19 +262,19 @@ output = map(df, mean_and_sd)</code></pre>
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  2.86  1.33
+## 1  3.07 0.949
 ## 
 ## $b
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1 -2.23  4.46
+## 1  1.27  4.47
 ## 
 ## $c
 ## # A tibble: 1 x 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  9.93 0.251</code></pre>
+## 1  10.0 0.226</code></pre>
 <p>Let’s try a differently funciton</p>
 <pre class="r"><code>output = map(df, summary)</code></pre>
 </div>
