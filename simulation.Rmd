@@ -1,0 +1,237 @@
+---
+title: "Simulation"
+author: "Xue Yang"
+date: "10/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rvest)
+
+
+```
+
+```{r}
+set.seed(1)
+
+```
+
+
+## Simulation
+
+Simulation function...
+
+```{r}
+sim_regression = function(n, beta0 = 2, beta1 = 3) {
+  
+  # generate data
+  sim_data = tibble(
+    x = rnorm(n, mean = 1, sd = 1),
+    y = beta0 + beta1 * x + rnorm(n, 0, 1)
+  )
+  
+  # fit the linear model
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  tibble(
+    beta0_hat = coef(ls_fit)[1],
+    beta1_hat = coef(ls_fit)[2]
+  )
+}
+```
+
+Run it a few times..
+
+```{r}
+sim_regression(n = 30, beta0 = 2, beta1 = 3)
+```
+
+Iterate simulations!!
+
+```{r}
+
+# the input of the funtion can be exactly the same everytime we want this funtion, so we only need to create output
+output = vector("list", length = 100)
+
+for (i in 1:100) {
+  output[[i]] = sim_regression(n = 30, beta0 = 2, beta1 = 3)
+}
+
+results = 
+  output %>% 
+  bind_rows() # collect a lists of dataframes in a single dataframe
+```
+
+
+(Pause to look at things)
+
+```{r}
+results %>% 
+  summarize(mean_b0 = mean(beta0_hat),
+            mean_b1 = mean(beta1_hat))
+
+results %>% 
+  ggplot(aes(x = beta0_hat, y = beta1_hat)) +
+  geom_point()
+```
+
+A better way to iterate...
+
+'rerun' function
+
+```{r}
+# ?rerun
+results = 
+  rerun(1000, sim_regression(30,2,3)) %>% 
+  bind_rows()
+```
+
+### Increase sample size
+
+'for' loop..
+
+```{r}
+n_list = list("n_30"  = 30, 
+              "n_60"  = 60, 
+              "n_120" = 120, 
+              "n_240" = 240)
+output = vector("list", length = 4)
+
+for (i in 1:4) {
+  output[[i]] = 
+    rerun(100, sim_regression(n = n_list[[i]], 2, 3)) %>% 
+    bind_rows
+}
+```
+
+Recast using 'map's...
+
+```{r}
+simulate_n_regressions = function(n_runs = 100, n, beta0 = 2, beta1 = 3) 
+  {
+  
+  rerun(n_runs, sim_regression(n, beta0, beta1)) %>% 
+    bind_rows()
+  
+}
+
+simulate_n_regressions(150, 30, 22, 3)
+
+map(.x = n_list, ~simulate_n_regressions(n_runs = 100, n = .x, beta0 = 2, beta1 = 3))
+```
+
+
+Use a list column!!!
+
+```{r}
+# get all the sample size and the estimator in a dataframe
+sim_results = 
+  tibble(sample_size = c(30, 60, 120, 240)) %>% 
+  mutate(estimate_dfs = map(.x = sample_size, ~simulate_n_regressions(n_runs = 1000, n = .x, beta0 = 2, beta1 = 3))) %>% 
+  unnest
+```
+
+```{r}
+sim_results %>% 
+  group_by(sample_size) %>% 
+  summarize(emp_var_bl = var(beta1_hat))
+```
+
+
+```{r}
+sim_results %>% 
+  ggplot(aes(x = beta0_hat, y = beta1_hat)) +
+  geom_point() +
+  facet_grid(~sample_size)
+```
+
+
+## Publication bias
+
+New 'sim_regression' function
+
+```{r}
+sim_regression = function(n_samp = 30, beta0 = 2, beta1 = 3) {
+  
+  sim_data = tibble(
+    x = rnorm(n_samp),
+    y = beta0 + beta1 * x + rnorm(n_samp, 0, sqrt(50))
+  )
+  
+  ls_fit = lm(y ~ x, data = sim_data)
+  
+  broom::tidy(ls_fit) # give you a nice readbale format
+  
+}
+
+sim_regression(n_samp = 30, beta0 = 2, beta1 = 3)
+```
+
+
+Simulate for slope
+```{r}
+# change the slope rather than change the sample size
+sim_results = 
+  tibble(beta1_true = 0:6) %>% 
+  mutate(
+    # '.x = beta1_true' is the input, and 'simulate_n_regressions()' is the function
+    estimate_dfs = map(.x = beta1_true, ~simulate_n_regressions(n_runs = 10000, n = 30, beta1 = .x))
+  ) 
+
+sim_results$estimate_dfs
+
+```
+
+
+Tidy up the results.
+
+```{r}
+sim_results = 
+  sim_results %>% 
+  unnest() %>% 
+  filter(term == "x") %>% 
+  select(beta1_true, estimate, p.value) %>% 
+  mutate(significant = as.numeric(p.value < 0.05)) # 0 means fail to reject, not siginifcant
+
+```
+
+
+```{r}
+sim_results %>% 
+  group_by(beta1_true) %>% 
+  summarize(mean_est = mean(estimate),
+            # power is asking how often do you reject the null when there is a significant ( the probability to reject the null when it is false)
+            power = mean(significant)) 
+```
+
+Look at the real thing of interest
+
+```{r}
+results_summary = 
+  sim_results %>% 
+  group_by(beta1_true) %>%
+  nest() %>% 
+  mutate(
+    all = map_dbl(.x = data, ~ .x %>% pull(estimate) %>% mean),
+    signif = map_dbl(.x = data, ~ .x %>% filter(significant == 1) %>% pull(estimate) %>% mean)
+  ) %>% 
+  select(-data) %>% 
+  gather(key = results, value = average, all:signif) 
+
+results_summary %>% 
+  ggplot(aes(x = beta1_true, y = average, color = results)) + 
+  geom_point() +
+  geom_path() 
+  # average slope if we have all the simulated data, and average slope if all we have is signiificant trials data
+
+# overestimated
+```
+
+```{r}
+# why this happen
+sim_results %>% 
+  ggplot(aes(x = estimate)) + geom_histogram() + 
+  facet_grid(significant ~ beta1_true)
+```
+
